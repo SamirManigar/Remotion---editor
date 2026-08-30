@@ -1,0 +1,24 @@
+{
+	"name": "youtube-hook-remotion",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"studio": "remotion studio src/index.ts",
+		"still": "remotion still src/index.ts HookComposition out/hook-frame.png --frame=1131 --scale=0.25",
+		"render": "remotion render src/index.ts HookComposition out/final/Hook-Cinematic-60s-Final.mp4 --codec=h264 --crf=18 --audio-bitrate=320k --concurrency=6 --timeout=120000",
+		"pexels:search": "powershell -ExecutionPolicy Bypass -File scripts/search-pexels.ps1"
+	},
+	"dependencies": {
+		"@remotion/cli": "^4.0.496",
+		"@remotion/media": "latest",
+		"@remotion/renderer": "latest",
+		"react": "latest",
+		"react-dom": "latest",
+		"remotion": "latest"
+	},
+	"devDependencies": {
+		"@types/react": "latest",
+		"typescript": "^5.9.3"
+	}
+}
