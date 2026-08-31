@@ -1,0 +1,58 @@
+name: Analyze Act 2 Volume
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/analyze-act2-volume.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Download cloud-rendered Act 2
+        uses: actions/download-artifact@v4
+        with:
+          name: Act2Composition-current
+          path: artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 33351477559
+
+      - name: Measure integrated loudness and true peak
+        id: measure
+        shell: bash
+        run: |
+          ffmpeg -hide_banner \
+            -i artifact/Act2Composition-current.mp4 \
+            -map 0:a:0 \
+            -af loudnorm=I=-14:TP=-1:LRA=7:print_format=json \
+            -f null - 2> loudness.log
+
+          LUFS=$(sed -n 's/.*"input_i" : "\([^"]*\)".*/\1/p' loudness.log)
+          PEAK=$(sed -n 's/.*"input_tp" : "\([^"]*\)".*/\1/p' loudness.log)
+          LRA=$(sed -n 's/.*"input_lra" : "\([^"]*\)".*/\1/p' loudness.log)
+
+          echo "lufs=$LUFS" >> "$GITHUB_OUTPUT"
+          echo "peak=$PEAK" >> "$GITHUB_OUTPUT"
+          echo "lra=$LRA" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Act 2 volume analysis"
+            echo "- Integrated loudness: ${LUFS} LUFS"
+            echo "- True peak: ${PEAK} dBTP"
+            echo "- Loudness range: ${LRA} LU"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload volume report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Act2-LUFS-${{ steps.measure.outputs.lufs }}-TP-${{ steps.measure.outputs.peak }}
+          path: loudness.log
+          retention-days: 7
