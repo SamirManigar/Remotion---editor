@@ -29,8 +29,16 @@ jobs:
         id: measure
         shell: bash
         run: |
+          VIDEO=$(find artifact -type f -iname '*.mp4' -print -quit)
+          if [ -z "$VIDEO" ]; then
+            echo "No MP4 was found in the downloaded artifact."
+            find artifact -maxdepth 4 -type f -print
+            exit 1
+          fi
+
+          echo "Analyzing $VIDEO"
           ffmpeg -hide_banner \
-            -i artifact/Act2Composition-current.mp4 \
+            -i "$VIDEO" \
             -map 0:a:0 \
             -af loudnorm=I=-14:TP=-1:LRA=7:print_format=json \
             -f null - 2> loudness.log
