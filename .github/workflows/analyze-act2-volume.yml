@@ -25,6 +25,11 @@ jobs:
           repository: ${{ github.repository }}
           run-id: 33351477559
 
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
       - name: Measure integrated loudness and true peak
         id: measure
         shell: bash
