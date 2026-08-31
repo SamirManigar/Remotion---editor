@@ -86,13 +86,14 @@ const Still: React.FC<{
 	src: string;
 	duration: number;
 	darken?: number;
+	gray?: number;
 	zoom?: [number, number];
-}> = ({src, duration, darken = 0.3, zoom = [1.02, 1.08]}) => {
+}> = ({src, duration, darken = 0.3, gray = 0, zoom = [1.02, 1.08]}) => {
 	const frame = useCurrentFrame();
 	const scale = interpolate(frame, [0, duration], zoom, {extrapolateRight: "clamp"});
 	return (
 		<AbsoluteFill style={{backgroundColor: BG, overflow: "hidden"}}>
-			<Img src={src} style={{width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})`, filter: `brightness(${1 - darken}) contrast(1.08)`}} />
+			<Img src={src} style={{width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})`, filter: `brightness(${1 - darken}) grayscale(${gray}) saturate(.72) contrast(1.16)`}} />
 			<AbsoluteFill style={{background: "rgba(15,15,15,.18)"}} />
 		</AbsoluteFill>
 	);
@@ -274,7 +275,7 @@ const Willpower: React.FC = () => {
 	const frame = useCurrentFrame();
 	return (
 		<AbsoluteFill>
-			{frame < 70 ? <Plate src={pexels("dominoes-dark.mp4")} duration={70} darken={0.3} gray={0.25} /> : <Still src={hook("Human_brain_torn_paper_collage_202607231706.jpeg")} duration={90} darken={0.4} zoom={[1.07, 1.02]} />}
+			{frame < 70 ? <Plate src={pexels("dominoes-dark.mp4")} duration={70} darken={0.3} gray={0.25} /> : <Still src={hook("Human_brain_torn_paper_collage_202607231706.jpeg")} duration={90} darken={0.48} gray={0.5} zoom={[1.07, 1.02]} />}
 			<div style={{position: "absolute", left: 145, top: 130}}><Eyebrow color={GOLD}>Why the cycle keeps repeating</Eyebrow></div>
 			{frame < 70 && <div style={{position: "absolute", right: 140, bottom: 140}}><Impact entry={12} size={132} align="right">Keep<br /><span style={{color: RED}}>falling.</span></Impact></div>}
 			{frame >= 70 && <AbsoluteFill style={center}><Impact entry={70} size={170}>Willpower</Impact><Strike entry={105} width={800} /></AbsoluteFill>}
@@ -292,7 +293,7 @@ const Labels: React.FC = () => {
 	];
 	return (
 		<AbsoluteFill>
-			<Still src={hook("paper-brain.png")} duration={132} darken={0.55} zoom={[1.03, 1.1]} />
+			<Still src={hook("paper-brain.png")} duration={132} darken={0.68} gray={0.82} zoom={[1.03, 1.1]} />
 			<div style={{position: "absolute", left: 180, top: 125, bottom: 125, display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
 				{labels.map((label) => (
 					<div key={label.word} style={{position: "relative", width: 760}}>
@@ -338,13 +339,27 @@ const Title: React.FC = () => {
 	const decay = interpolate(frame, [0, 12], [1, 0], {extrapolateRight: "clamp"});
 	const x = (random(`title-x-${frame}`) - 0.5) * 18 * decay;
 	const y = (random(`title-y-${frame}`) - 0.5) * 18 * decay;
+	const phaseOpacity = (start: number, end: number) => interpolate(
+		frame,
+		[start, start + 8, end - 8, end],
+		[0, 1, 1, 0],
+		{extrapolateLeft: "clamp", extrapolateRight: "clamp"},
+	);
 	return (
 		<AbsoluteFill>
 			<Plate src={renderHook("dark-abstract.mp4")} duration={155} darken={0.18} />
 			<AbsoluteFill style={{...center, transform: `translate(${x}px,${y}px) scale(1.02)`}}>
-				<div style={{transform: `scale(${scale})`, textAlign: "center"}}>
+				<div style={{position: "absolute", opacity: phaseOpacity(0, 66), transform: `scale(${scale})`, textAlign: "center"}}>
 					<div style={{fontFamily: "Anton, Impact, sans-serif", color: WHITE, fontSize: 170, lineHeight: 0.9, textTransform: "uppercase"}}>Why you struggle</div>
-					<div style={{marginTop: 32, fontFamily: "Arial, sans-serif", color: RED, fontSize: 42, fontWeight: 800, textTransform: "uppercase"}}>to stop watching haram content</div>
+					<div style={{marginTop: 30, fontFamily: "Arial, sans-serif", color: RED, fontSize: 42, fontWeight: 800, textTransform: "uppercase"}}>to stop watching haram content</div>
+				</div>
+				<div style={{position: "absolute", opacity: phaseOpacity(58, 110), textAlign: "center"}}>
+					<Eyebrow color={GOLD}>The myth</Eyebrow>
+					<div style={{marginTop: 22}}><Impact entry={58} size={172}>Willpower <span style={{color: RED}}>fails.</span></Impact></div>
+				</div>
+				<div style={{position: "absolute", opacity: phaseOpacity(102, 155), textAlign: "center"}}>
+					<Eyebrow color={GOLD}>What changes the outcome</Eyebrow>
+					<div style={{marginTop: 22}}><Impact entry={102} size={158}>Practical steps.</Impact></div>
 				</div>
 			</AbsoluteFill>
 			<Sequence from={0} durationInFrames={34}><Audio src={sfx("riser-drop.mp3")} volume={0.26} /></Sequence>
@@ -441,6 +456,16 @@ const FinalRise: React.FC = () => {
 		</AbsoluteFill>
 	);
 };
+
+/** B-roll-led closing montage, timed to the final voiceover list. */
+const CinematicFinalAct: React.FC = () => (
+	<AbsoluteFill>
+		<Sequence from={0} durationInFrames={141}><Practical /></Sequence>
+		<Sequence from={141} durationInFrames={71}><Screen /></Sequence>
+		<Sequence from={212} durationInFrames={47}><IconBeat label="HEART." icon={hook("heart-icon.png")} duration={47} background={renderHook("slumped-relief.mp4")} /></Sequence>
+		<Sequence from={259} durationInFrames={52}><IconBeat label="FOCUS." icon={hook("eye-icon.jpg")} duration={52} background={renderHook("eyes-focus.mp4")} /></Sequence>
+	</AbsoluteFill>
+);
 
 const GraphicFinalAct: React.FC = () => {
 	const frame = useCurrentFrame();
@@ -639,7 +664,7 @@ export const HookComposition: React.FC = () => (
 		<Sequence from={1132} durationInFrames={155}><Title /></Sequence>
 		<Sequence from={1287} durationInFrames={66}><WillpowerFails /></Sequence>
 		<Sequence from={1353} durationInFrames={35}><MostImportant /></Sequence>
-		<Sequence from={1388} durationInFrames={412}><GraphicFinalAct /></Sequence>
+		<Sequence from={1388} durationInFrames={311}><CinematicFinalAct /></Sequence>
 		<Sequence from={1699} durationInFrames={101}><SunriseEnding /></Sequence>
 
 		<Finish />
