@@ -1,0 +1,47 @@
+name: Render Act 2
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/render-act2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Render current Act 2 composition
+        run: >-
+          npx remotion render src/index.ts Act2Composition
+          out/cloud/Act2Composition-current.mp4
+          --codec=h264
+          --crf=18
+          --audio-bitrate=320k
+          --concurrency=4
+          --timeout=120000
+
+      - name: Upload rendered video
+        uses: actions/upload-artifact@v4
+        with:
+          name: Act2Composition-current
+          path: out/cloud/Act2Composition-current.mp4
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
