@@ -1,0 +1,76 @@
+name: Generate Act 3 Sound Effects
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/act3-sfx-workflow
+    paths:
+      - ".github/workflows/generate-act3-sfx.yml"
+      - "scripts/act3-sfx-manifest.json"
+      - "scripts/generate-elevenlabs-sfx.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate Act 3 sound effects
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: npm run sfx:act3
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
+      - name: Convert generated effects to 48 kHz WAV
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/generated/act3-sfx-wav
+
+          for source in out/generated/act3-sfx/*.mp3; do
+            name="$(basename "$source" .mp3)"
+            ffmpeg -hide_banner -loglevel error -y \
+              -i "$source" \
+              -ar 48000 \
+              -ac 2 \
+              -c:a pcm_s24le \
+              "out/generated/act3-sfx-wav/${name}.wav"
+          done
+
+      - name: Write generation report
+        shell: bash
+        run: |
+          {
+            echo "## Act 3 sound-effects pack"
+            echo
+            echo "Generated with ElevenLabs Sound Effects v2 and converted to stereo 48 kHz, 24-bit WAV."
+            echo
+            for file in out/generated/act3-sfx-wav/*.wav; do
+              echo "- $(basename "$file")"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload WAV sound-effects pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: act3-generated-sfx
+          path: out/generated/act3-sfx-wav/*.wav
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
