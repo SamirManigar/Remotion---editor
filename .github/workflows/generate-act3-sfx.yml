@@ -9,6 +9,7 @@ on:
       - ".github/workflows/generate-act3-sfx.yml"
       - "scripts/act3-sfx-manifest.json"
       - "scripts/generate-elevenlabs-sfx.mjs"
+      - "package.json"
 
 permissions:
   contents: read
