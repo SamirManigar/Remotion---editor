@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
 	AbsoluteFill,
 	Img,
 	Sequence,
+	continueRender,
+	delayRender,
 	interpolate,
 	random,
 	spring,
@@ -14,7 +16,7 @@ import { Audio, Video } from "@remotion/media";
 import { CameraShake, ImpactText, SerifText } from "./KineticUtils";
 
 export const ACT2_FPS = 30;
-export const ACT2_DURATION_IN_FRAMES = 2370;
+export const ACT2_DURATION_IN_FRAMES = 2400;
 
 const BG = "#0F0F0F";
 const WHITE = "#FFFFFF";
@@ -25,9 +27,27 @@ const VOICEOVER_GAIN = 1.55;
 const DRONE_BED_GAIN = 0.26;
 
 const v2Visual = (name: string) => staticFile(`assets/visuals/v2/${name}`);
+const pexelsVisual = (name: string) => staticFile(`assets/visuals/pexels/render/${name}`);
+const hookVisual = (name: string) => staticFile(`assets/visuals/hook/render/${name}`);
 const sound = (name: string) => staticFile(`assets/audio/${name}`);
 
 const ACT2_VOICEOVER = sound("vo-act2.wav");
+
+const Act2FontLoader: React.FC = () => {
+	const [handle] = useState(() => delayRender("Loading Act 2 fonts"));
+	useEffect(() => {
+		Promise.all([
+			document.fonts.load("400 48px Anton"),
+			document.fonts.load("700 48px Playfair Display"),
+		]).finally(() => continueRender(handle));
+	}, [handle]);
+	return (
+		<style>{`
+			@font-face{font-family:Anton;src:url('${staticFile("assets/fonts/Anton-Regular.ttf")}') format('truetype');font-weight:400;font-style:normal}
+			@font-face{font-family:'Playfair Display';src:url('${staticFile("assets/fonts/PlayfairDisplay-Variable.ttf")}') format('truetype');font-weight:400 900;font-style:normal}
+		`}</style>
+	);
+};
 
 const center: React.CSSProperties = {
 	display: "flex",
@@ -67,7 +87,7 @@ const BackgroundVideo: React.FC<{
 					width: "100%",
 					height: "100%",
 					transform: `scale(${scale})`,
-					filter: `brightness(${1 - darken}) ${filter}`,
+					filter: `brightness(${1 - darken}) saturate(.72) contrast(1.12) ${filter}`,
 				}}
 			/>
 		</AbsoluteFill>
@@ -92,7 +112,7 @@ const BackgroundImage: React.FC<{
 					height: "100%",
 					objectFit: fit,
 					transform: `scale(${scale})`,
-					filter: `brightness(${1 - darken})`,
+					filter: `brightness(${1 - darken}) saturate(.7) contrast(1.14)`,
 				}}
 			/>
 		</AbsoluteFill>
@@ -351,8 +371,8 @@ const RedStrikethrough: React.FC<{ startFrame: number; width?: number }> = ({ st
 // 1. The Misconception (0–90)
 const TheMisconception: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<ProceduralDarkGraphic variant="misconception" />
-		<ImpactText entryFrame={0} style={{ color: RED, fontSize: 150 }}>
+		<BackgroundVideo src={pexelsVisual("man-distress-close.mp4")} durationInFrames={83} darken={0.48} filter="grayscale(.35)" />
+		<ImpactText entryFrame={3} style={{ color: RED, fontSize: 150, textShadow: "0 8px 30px rgba(0,0,0,.9)" }}>
 			BIGGEST MISTAKE
 		</ImpactText>
 	</AbsoluteFill>
@@ -361,6 +381,7 @@ const TheMisconception: React.FC = () => (
 // 2. Single Action Myth (90–180)
 const SingleActionMyth: React.FC = () => (
 	<AbsoluteFill style={{ ...center, backgroundColor: BG }}>
+		<BackgroundVideo src={pexelsVisual("computer-night.mp4")} durationInFrames={95} darken={0.5} filter="grayscale(.25)" />
 		<SpringImpactText fromScale={0.25} config={{ damping: 9, stiffness: 190, mass: 0.55 }} style={{ color: WHITE, fontSize: 150 }}>
 			SINGLE BAD ACTION
 		</SpringImpactText>
@@ -370,12 +391,12 @@ const SingleActionMyth: React.FC = () => (
 // 3. The Click (180–270)
 const TheClick: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundVideo src={v2Visual("mouse-click-dark.mp4")} durationInFrames={90} darken={0.18} />
-		<ImpactText entryFrame={50} style={{ color: WHITE, fontSize: 145 }}>
+		<BackgroundVideo src={v2Visual("mouse-click-dark.mp4")} durationInFrames={72} darken={0.24} />
+		<ImpactText entryFrame={30} style={{ color: WHITE, fontSize: 145 }}>
 			WHEN THEY CLICK
 		</ImpactText>
-		<Sequence from={50}>
-			<Audio src={sound("digital-click.mp3")} volume={0.85} />
+		<Sequence from={30}>
+			<Audio src={sound("digital-click.mp3")} volume={0.38} />
 		</Sequence>
 	</AbsoluteFill>
 );
@@ -383,24 +404,33 @@ const TheClick: React.FC = () => (
 // 4. The Reality (270–360)
 const TheReality: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundVideo src={v2Visual("ceiling-stare.mp4")} durationInFrames={90} darken={0.22} />
-		<SerifText entryFrame={0} style={{ color: GOLD, fontSize: 132 }}>
+		<BackgroundVideo src={pexelsVisual("insomnia-bed.mp4")} durationInFrames={86} darken={0.4} />
+		<SerifText entryFrame={0} style={{ color: GOLD, fontSize: 118, textShadow: "0 8px 30px rgba(0,0,0,.9)" }}>
 			STARTS MUCH EARLIER
 		</SerifText>
+	</AbsoluteFill>
+);
+
+const ThinkAboutIt: React.FC = () => (
+	<AbsoluteFill style={{ ...center, backgroundColor: BG }}>
+		<SerifText entryFrame={0} style={{ color: GOLD, fontSize: 126 }}>Think about it.</SerifText>
 	</AbsoluteFill>
 );
 
 // 5. Nobody Wakes Up (360–450)
 const NobodyWakesUp: React.FC = () => (
 	<AbsoluteFill>
-		<BackgroundVideo src={v2Visual("empty-bedroom-after-urge.mp4")} durationInFrames={90} darken={0.22} />
+		<BackgroundVideo src={pexelsVisual("insomnia-bed.mp4")} durationInFrames={137} darken={0.32} />
+		<div style={{ position: "absolute", left: 145, bottom: 140 }}>
+			<ImpactText entryFrame={10} style={{ color: WHITE, fontSize: 112, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>IT NEVER STARTS<br /><span style={{ color: RED }}>ALL AT ONCE.</span></ImpactText>
+		</div>
 	</AbsoluteFill>
 );
 
 // 6. The Steps Before (450–540)
 const TheStepsBefore: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<WireTensionGraphic />
+		<BackgroundVideo src={pexelsVisual("pocket-watch.mp4")} durationInFrames={65} darken={0.42} />
 		<SpringImpactText fromScale={0.48} config={{ damping: 8, stiffness: 220, mass: 0.45 }} style={{ color: WHITE, fontSize: 128 }}>
 			STEPS BEFORE IT
 		</SpringImpactText>
@@ -440,7 +470,7 @@ const TheImageTrigger: React.FC = () => (
 // 9. Boredom & Loneliness (720–810)
 const BoredomAndLoneliness: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<LonelinessGraphic />
+		<BackgroundVideo src={pexelsVisual("man-alone-window.mp4")} durationInFrames={82} darken={0.36} filter="grayscale(.18)" />
 		<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
 			<ImpactText entryFrame={0} style={{ color: WHITE, fontSize: 138 }}>
 				BOREDOM.
@@ -455,7 +485,7 @@ const BoredomAndLoneliness: React.FC = () => (
 // 10. Defenses Low (810–900)
 const DefensesLow: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundVideo src={v2Visual("tired-eye-rub.mp4")} durationInFrames={90} darken={0.28} />
+		<BackgroundVideo src={pexelsVisual("man-distress-close.mp4")} durationInFrames={161} darken={0.38} filter="grayscale(.22)" />
 		<CameraShake intensity={4} activeDuration={15}>
 			<AbsoluteFill style={center}>
 				<ImpactText entryFrame={0} style={{ color: RED, fontSize: 145 }}>
@@ -469,9 +499,13 @@ const DefensesLow: React.FC = () => (
 // 11. The Chain Reaction (900–1080)
 const TheChainReaction: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundVideo src={v2Visual("falling-dominos.mp4")} durationInFrames={180} darken={0.12} trimBefore={10 * ACT2_FPS} />
+		<BackgroundVideo src={pexelsVisual("dominoes-dark.mp4")} durationInFrames={157} darken={0.2} />
+		<div style={{ position: "absolute", left: 145, bottom: 140 }}>
+			<ImpactText entryFrame={8} style={{ color: WHITE, fontSize: 112, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>ONE DECISION.</ImpactText>
+			<ImpactText entryFrame={68} style={{ color: RED, fontSize: 128, textShadow: "0 8px 28px rgba(0,0,0,.95)", marginTop: 14 }}>THEN ANOTHER.</ImpactText>
+		</div>
 		<Sequence from={0}>
-			<Audio src={sound("domino-clatter.mp3")} volume={0.28} />
+			<Audio src={sound("domino-clatter.mp3")} volume={0.22} />
 		</Sequence>
 	</AbsoluteFill>
 );
@@ -509,7 +543,7 @@ const WillpowerMyth: React.FC = () => (
 // 14. Temptation is Far (1260–1350)
 const TemptationIsFar: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundVideo src={v2Visual("faceless-restless-person.mp4")} durationInFrames={90} darken={0.42} />
+		<BackgroundVideo src={pexelsVisual("phone-hand-dark.mp4")} durationInFrames={108} darken={0.48} filter="grayscale(.2)" />
 		<ImpactText
 			entryFrame={0}
 			style={{
@@ -535,24 +569,13 @@ const TheTrap: React.FC = () => {
 
 	return (
 		<AbsoluteFill style={{ ...center, backgroundColor: BG, overflow: "hidden" }}>
-			<BackgroundImage src={v2Visual("paper-trap.jpeg")} durationInFrames={90} darken={0.08} fit="contain" />
+			<BackgroundVideo src={v2Visual("eye-reflecting-phone.mp4")} durationInFrames={149} darken={0.32} />
 			{frame >= 30 && (
-				<Img
-					src={v2Visual("red-scribble-circle.jpeg")}
-					style={{
-						position: "absolute",
-						top: "50%",
-						left: "50%",
-						width: "72%",
-						height: "72%",
-						objectFit: "contain",
-						transform: `translate(-50%, -50%) scale(${trapScale * scribbleScale})`,
-						mixBlendMode: "multiply",
-					}}
-				/>
+				<div style={{ position: "absolute", width: 700, height: 700, borderRadius: "50%", border: "12px solid #E50914", transform: `rotate(-7deg) scale(${trapScale * scribbleScale})`, boxShadow: "0 0 42px rgba(229,9,20,.42)" }} />
 			)}
+			<div style={{ position: "absolute", bottom: 135 }}><ImpactText entryFrame={34} style={{ color: RED, fontSize: 128, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>ALREADY IN FRONT OF YOU</ImpactText></div>
 			<Sequence from={30}>
-				<Audio src={sound("marker-scribble.mp3")} volume={0.62} />
+				<Audio src={sound("marker-scribble.mp3")} volume={0.3} />
 			</Sequence>
 		</AbsoluteFill>
 	);
@@ -561,27 +584,28 @@ const TheTrap: React.FC = () => {
 // 16. The Diet Metaphor (1440–1530)
 const TheDietMetaphor: React.FC = () => (
 	<AbsoluteFill>
-		<BackgroundImage src={v2Visual("cake-cutout.jpeg")} durationInFrames={90} darken={0.14} fit="contain" />
+		<BackgroundImage src={v2Visual("cake-cutout.jpeg")} durationInFrames={133} darken={0.52} fit="contain" />
+		<AbsoluteFill style={{ background: "linear-gradient(90deg,rgba(15,15,15,.72),transparent 58%,rgba(15,15,15,.28))" }} />
 	</AbsoluteFill>
 );
 
 // 17. The Struggle (1530–1710)
 const TheStruggle: React.FC = () => {
 	const frame = useCurrentFrame();
-	const harderOpacity = interpolate(frame, [90, 98, 158, 174], [0, 1, 1, 0], {
+	const harderOpacity = interpolate(frame, [18, 23, 48, 58], [0, 1, 1, 0], {
 		extrapolateLeft: "clamp",
 		extrapolateRight: "clamp",
 	});
 
 	return (
 		<AbsoluteFill style={center}>
-			<BackgroundVideo src={v2Visual("hand-resisting-food.mp4")} durationInFrames={180} darken={0.2} />
-			<RedStrikethrough startFrame={90} width={900} />
-			<ImpactText entryFrame={90} style={{ color: RED, fontSize: 170, opacity: harderOpacity }}>
+			<BackgroundVideo src={v2Visual("hand-resisting-food.mp4")} durationInFrames={59} darken={0.32} />
+			<RedStrikethrough startFrame={20} width={900} />
+			<ImpactText entryFrame={20} style={{ color: RED, fontSize: 170, opacity: harderOpacity }}>
 				HARDER.
 			</ImpactText>
-			<Sequence from={90}>
-				<Audio src={sound("paper-tear.mp3")} volume={0.55} />
+			<Sequence from={20}>
+				<Audio src={sound("paper-tear.mp3")} volume={0.28} />
 			</Sequence>
 		</AbsoluteFill>
 	);
@@ -590,14 +614,14 @@ const TheStruggle: React.FC = () => {
 // 17b. The metaphor resolves into the habit argument (1710–1800).
 const SamePrinciple: React.FC = () => {
 	const frame = useCurrentFrame();
-	const lineWidth = interpolate(frame, [10, 42], [0, 720], {
+	const lineWidth = interpolate(frame, [6, 35], [0, 720], {
 		extrapolateLeft: "clamp",
 		extrapolateRight: "clamp",
 	});
 
 	return (
 		<AbsoluteFill style={{ ...center, backgroundColor: BG }}>
-			<ProceduralDarkGraphic variant="far" />
+			<BackgroundVideo src={hookVisual("dark-abstract.mp4")} durationInFrames={45} darken={0.34} />
 			<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 34 }}>
 				<SerifText entryFrame={0} style={{ color: GOLD, fontSize: 132, textShadow: "0 3px 18px rgba(0,0,0,0.95)" }}>
 					THE SAME PRINCIPLE
@@ -611,12 +635,12 @@ const SamePrinciple: React.FC = () => {
 // 18. Hundreds of Battles (1800–1980)
 const HundredsOfBattles: React.FC = () => (
 	<AbsoluteFill style={center}>
-		<BackgroundImage src={v2Visual("tally-marks.jpeg")} durationInFrames={180} darken={0.22} fit="contain" />
-		<SpringImpactText entryFrame={90} fromScale={3.1} config={{ damping: 9, stiffness: 175, mass: 0.6 }} style={{ color: RED, fontSize: 128 }}>
+		<BackgroundImage src={v2Visual("tally-marks.jpeg")} durationInFrames={159} darken={0.42} fit="contain" />
+		<SpringImpactText entryFrame={46} fromScale={2.2} config={{ damping: 11, stiffness: 175, mass: 0.6 }} style={{ color: RED, fontSize: 128, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>
 			HUNDREDS OF BATTLES
 		</SpringImpactText>
-		<Sequence from={90}>
-			<Audio src={sound("marker-scribble.mp3")} volume={0.78} />
+		<Sequence from={46}>
+			<Audio src={sound("marker-scribble.mp3")} volume={0.32} />
 		</Sequence>
 	</AbsoluteFill>
 );
@@ -624,56 +648,55 @@ const HundredsOfBattles: React.FC = () => (
 // 19. Exhaustion (1980–2160)
 const Exhaustion: React.FC = () => {
 	const frame = useCurrentFrame();
-	const exhausted = frame >= 30;
-	const imageScale = slowScale(frame, 180);
+	const exhausted = frame >= 48;
+	const charge = interpolate(frame, [0, 126], [1, 0.06], { extrapolateRight: "clamp" });
 
 	return (
 		<AbsoluteFill style={center}>
-			<TimedShake startFrame={30} durationInFrames={15} intensity={4}>
-				<Img
-					src={v2Visual("battery-drain.jpeg")}
-					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						width: "100%",
-						height: "100%",
-						objectFit: "contain",
-						transform: `scale(${imageScale})`,
-						filter: "brightness(0.88)",
-						opacity: exhausted ? 0.3 : 1,
-					}}
-				/>
+			<BackgroundVideo src={pexelsVisual("man-distress-close.mp4")} durationInFrames={156} darken={0.58} filter="grayscale(.55)" />
+			<TimedShake startFrame={48} durationInFrames={15} intensity={4}>
+				<div style={{ position: "absolute", left: 145, top: 150, width: 610, height: 88, border: "7px solid rgba(255,255,255,.82)", borderRadius: 12, padding: 12 }}>
+					<div style={{ width: `${charge * 100}%`, height: "100%", backgroundColor: charge > .3 ? WHITE : RED, boxShadow: charge <= .3 ? "0 0 24px rgba(229,9,20,.5)" : "none" }} />
+				</div>
 			</TimedShake>
-			<AbsoluteFill style={center}>
-				<ImpactText entryFrame={0} style={{ color: exhausted ? MUTED : WHITE, fontSize: 150 }}>
+			<div style={{ position: "absolute", left: 145, bottom: 145 }}>
+				<ImpactText entryFrame={0} style={{ color: exhausted ? MUTED : WHITE, fontSize: 132, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>
 					SELF-CONTROL
 				</ImpactText>
-			</AbsoluteFill>
+				<ImpactText entryFrame={58} style={{ color: RED, fontSize: 122, marginTop: 10, textShadow: "0 8px 28px rgba(0,0,0,.95)" }}>GETS EXHAUSTED.</ImpactText>
+			</div>
 		</AbsoluteFill>
 	);
 };
 
 // 20. The Real Battle (2160–2370)
-const TheRealBattle: React.FC = () => (
-	<AbsoluteFill style={center}>
-		<SunriseGraphic />
-		<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22 }}>
-			<SlowSerifLine color={WHITE} fontSize={82}>
-				REDUCE EXPOSURE
-			</SlowSerifLine>
-			<SlowSerifLine entryFrame={90} color={WHITE} fontSize={58}>
-				DON'T JUST FIGHT THE HABIT.
-			</SlowSerifLine>
-			<SlowSerifLine entryFrame={150} color={GOLD} fontSize={116}>
-				FIGHT THE ENVIRONMENT
-			</SlowSerifLine>
-		</div>
-		<Sequence from={180}>
-			<Audio src={sound("heavy-bass-boom.mp3")} volume={0.42} />
-		</Sequence>
-	</AbsoluteFill>
-);
+const TheRealBattle: React.FC = () => {
+	const frame = useCurrentFrame();
+	const phase = (start: number, fadeInEnd: number, fadeOutStart: number, end: number) =>
+		interpolate(frame, [start, fadeInEnd, fadeOutStart, end], [0, 1, 1, 0], {
+			extrapolateLeft: "clamp",
+			extrapolateRight: "clamp",
+		});
+
+	return (
+		<AbsoluteFill style={center}>
+			<BackgroundVideo src={hookVisual("sunrise-man.mp4")} durationInFrames={240} darken={0.16} />
+			<AbsoluteFill style={{ background: "linear-gradient(90deg,rgba(15,15,15,.72),rgba(15,15,15,.12) 62%,rgba(15,15,15,.18))" }} />
+			<div style={{ position: "absolute", opacity: phase(0, 14, 108, 124) }}>
+				<SlowSerifLine color={WHITE} fontSize={116}>REDUCE EXPOSURE</SlowSerifLine>
+			</div>
+			<div style={{ position: "absolute", opacity: phase(118, 132, 168, 182) }}>
+				<SlowSerifLine entryFrame={128} color={WHITE} fontSize={88}>DON'T JUST FIGHT THE HABIT.</SlowSerifLine>
+			</div>
+			<div style={{ position: "absolute", opacity: interpolate(frame, [178, 194], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+				<SlowSerifLine entryFrame={183} color={WHITE} fontSize={126}>FIGHT THE <span style={{ color: GOLD }}>ENVIRONMENT</span></SlowSerifLine>
+			</div>
+			<Sequence from={183}>
+				<Audio src={sound("heavy-bass-boom.mp3")} volume={0.24} />
+			</Sequence>
+		</AbsoluteFill>
+	);
+};
 
 /** Duck down over 15 frames, then return to full volume over the next 15. */
 const duckDroneVolume = (frame: number, impactFrames: number[]) => {
@@ -696,34 +719,36 @@ const duckDroneVolume = (frame: number, impactFrames: number[]) => {
 export const Act2Composition: React.FC = () => {
 	return (
 		<AbsoluteFill style={{ backgroundColor: BG }}>
-			<Sequence from={0} durationInFrames={90}><TheMisconception /></Sequence>
-			<Sequence from={90} durationInFrames={90}><SingleActionMyth /></Sequence>
-			<Sequence from={180} durationInFrames={90}><TheClick /></Sequence>
-			<Sequence from={270} durationInFrames={90}><TheReality /></Sequence>
-			<Sequence from={360} durationInFrames={90}><NobodyWakesUp /></Sequence>
-			<Sequence from={450} durationInFrames={90}><TheStepsBefore /></Sequence>
-			<Sequence from={540} durationInFrames={90}><VideoAndAccount /></Sequence>
-			<Sequence from={630} durationInFrames={90}><TheImageTrigger /></Sequence>
-			<Sequence from={720} durationInFrames={90}><BoredomAndLoneliness /></Sequence>
-			<Sequence from={810} durationInFrames={90}><DefensesLow /></Sequence>
-			<Sequence from={900} durationInFrames={180}><TheChainReaction /></Sequence>
-			<Sequence from={1080} durationInFrames={90}><TheRelapseCycle /></Sequence>
-			<Sequence from={1170} durationInFrames={90}><WillpowerMyth /></Sequence>
-			<Sequence from={1260} durationInFrames={90}><TemptationIsFar /></Sequence>
-			<Sequence from={1350} durationInFrames={90}><TheTrap /></Sequence>
-			<Sequence from={1440} durationInFrames={90}><TheDietMetaphor /></Sequence>
-			<Sequence from={1530} durationInFrames={180}><TheStruggle /></Sequence>
-			<Sequence from={1710} durationInFrames={90}><SamePrinciple /></Sequence>
-			<Sequence from={1800} durationInFrames={180}><HundredsOfBattles /></Sequence>
-			<Sequence from={1980} durationInFrames={180}><Exhaustion /></Sequence>
-			<Sequence from={2160} durationInFrames={210}><TheRealBattle /></Sequence>
+			<Act2FontLoader />
+			<Sequence from={0} durationInFrames={83}><TheMisconception /></Sequence>
+			<Sequence from={83} durationInFrames={95}><SingleActionMyth /></Sequence>
+			<Sequence from={178} durationInFrames={72}><TheClick /></Sequence>
+			<Sequence from={250} durationInFrames={86}><TheReality /></Sequence>
+			<Sequence from={336} durationInFrames={28}><ThinkAboutIt /></Sequence>
+			<Sequence from={364} durationInFrames={137}><NobodyWakesUp /></Sequence>
+			<Sequence from={501} durationInFrames={65}><TheStepsBefore /></Sequence>
+			<Sequence from={566} durationInFrames={118}><VideoAndAccount /></Sequence>
+			<Sequence from={684} durationInFrames={66}><TheImageTrigger /></Sequence>
+			<Sequence from={750} durationInFrames={82}><BoredomAndLoneliness /></Sequence>
+			<Sequence from={832} durationInFrames={161}><DefensesLow /></Sequence>
+			<Sequence from={993} durationInFrames={157}><TheChainReaction /></Sequence>
+			<Sequence from={1150} durationInFrames={98}><TheRelapseCycle /></Sequence>
+			<Sequence from={1248} durationInFrames={103}><WillpowerMyth /></Sequence>
+			<Sequence from={1351} durationInFrames={108}><TemptationIsFar /></Sequence>
+			<Sequence from={1459} durationInFrames={149}><TheTrap /></Sequence>
+			<Sequence from={1608} durationInFrames={133}><TheDietMetaphor /></Sequence>
+			<Sequence from={1741} durationInFrames={59}><TheStruggle /></Sequence>
+			<Sequence from={1800} durationInFrames={45}><SamePrinciple /></Sequence>
+			<Sequence from={1845} durationInFrames={159}><HundredsOfBattles /></Sequence>
+			<Sequence from={2004} durationInFrames={156}><Exhaustion /></Sequence>
+			<Sequence from={2160} durationInFrames={240}><TheRealBattle /></Sequence>
 
 			{/* Intro-matched global treatment: CSS vignette, grain, and CRT letterbox. */}
 			<AbsoluteFill style={{ pointerEvents: "none", background: vignette, zIndex: 100 }} />
-			<AbsoluteFill style={{ pointerEvents: "none", mixBlendMode: "screen", opacity: 0.3, zIndex: 101 }}>
+			<AbsoluteFill style={{ pointerEvents: "none", mixBlendMode: "screen", opacity: 0.18, zIndex: 101 }}>
 				<CssFilmGrain />
 			</AbsoluteFill>
-			<AbsoluteFill style={{ pointerEvents: "none", borderTop: "100px solid black", borderBottom: "100px solid black", zIndex: 102 }} />
+			<AbsoluteFill style={{ pointerEvents: "none", borderTop: "72px solid black", borderBottom: "72px solid black", zIndex: 102 }} />
 
 			<Audio
 				src={ACT2_VOICEOVER}
@@ -732,7 +757,7 @@ export const Act2Composition: React.FC = () => {
 			/>
 			<Audio
 				src={sound("low-cinematic-drone.mp3")}
-				volume={(audioFrame) => DRONE_BED_GAIN * duckDroneVolume(audioFrame, [1080, 2160 + 180])}
+				volume={(audioFrame) => DRONE_BED_GAIN * duckDroneVolume(audioFrame, [1150, 2343])}
 			/>
 		</AbsoluteFill>
 	);
