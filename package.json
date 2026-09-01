@@ -7,7 +7,8 @@
 		"studio": "remotion studio src/index.ts",
 		"still": "remotion still src/index.ts HookComposition out/hook-frame.png --frame=1131 --scale=0.25",
 		"render": "remotion render src/index.ts HookComposition out/final/Hook-Cinematic-60s-Final.mp4 --codec=h264 --crf=18 --audio-bitrate=320k --concurrency=6 --timeout=120000",
-		"pexels:search": "powershell -ExecutionPolicy Bypass -File scripts/search-pexels.ps1"
+		"pexels:search": "powershell -ExecutionPolicy Bypass -File scripts/search-pexels.ps1",
+		"sfx:act3": "node scripts/generate-elevenlabs-sfx.mjs scripts/act3-sfx-manifest.json out/generated/act3-sfx"
 	},
 	"dependencies": {
 		"@remotion/cli": "^4.0.496",
