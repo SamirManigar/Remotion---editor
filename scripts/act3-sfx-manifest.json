@@ -1,0 +1,20 @@
+[
+  {
+    "name": "fortress-gate-close",
+    "durationSeconds": 3.6,
+    "promptInfluence": 0.65,
+    "prompt": "A single enormous ancient stone fortress gate grinding and slamming firmly shut, deep cinematic low-frequency impact, heavy stone mechanics, short controlled reverb tail, professionally recorded film sound effect, no music, no voices, no battle ambience"
+  },
+  {
+    "name": "supply-line-shutdown",
+    "durationSeconds": 2.8,
+    "promptInfluence": 0.62,
+    "prompt": "A glowing energy supply line rapidly powering down, electrical current withdrawing inward from a narrow high-frequency shimmer into a deep muted cutoff, restrained cinematic science-fiction texture, clean isolated sound effect, no explosion, no music, no voices"
+  },
+  {
+    "name": "dark-cutaway-whoosh",
+    "durationSeconds": 1.3,
+    "promptInfluence": 0.58,
+    "prompt": "One fast dark air whoosh for a cinematic visual cut, smooth low-mid sweep ending in a subtle soft impact, polished trailer transition sound, clean isolated sound effect, no riser, no music, no voices"
+  }
+]
