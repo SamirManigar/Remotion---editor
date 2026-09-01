@@ -6,12 +6,6 @@
     "prompt": "A single enormous ancient stone fortress gate grinding and slamming firmly shut, deep cinematic low-frequency impact, heavy stone mechanics, short controlled reverb tail, professionally recorded film sound effect, no music, no voices, no battle ambience"
   },
   {
-    "name": "eye-gate-aperture-close",
-    "durationSeconds": 1.5,
-    "promptInfluence": 0.7,
-    "prompt": "A single large metallic iris aperture snapping closed with a precise mechanical sweep and crisp final lock, dark cinematic sound design, clean isolated studio sound effect, no camera flash, no music, no voices"
-  },
-  {
     "name": "supply-line-shutdown",
     "durationSeconds": 2.8,
     "promptInfluence": 0.62,
