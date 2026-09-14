@@ -1,0 +1,40 @@
+name: Prepare Jspark Short
+
+on:
+  push:
+    branches:
+      - codex/jspark-short
+    paths:
+      - .github/workflows/prepare-jspark.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install media tools
+        run: |
+          python -m pip install --upgrade yt-dlp
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Fetch captions and source metadata
+        shell: bash
+        run: |
+          mkdir -p analysis
+          yt-dlp --skip-download --write-auto-subs --write-subs --sub-langs "en,en-orig" --sub-format vtt -o "analysis/jspark.%(ext)s" "https://www.youtube.com/watch?v=3icVvgfe0Cw"
+          yt-dlp --skip-download --print "duration=%(duration)s width=%(width)s height=%(height)s fps=%(fps)s" "https://www.youtube.com/watch?v=3icVvgfe0Cw"
+          caption_file=$(find analysis -maxdepth 1 -name 'jspark*.vtt' | head -n 1)
+          if [ -z "$caption_file" ]; then
+            echo "No English captions were available" >&2
+            exit 1
+          fi
+          echo "===== CAPTIONS BEGIN ====="
+          cat "$caption_file"
+          echo "===== CAPTIONS END ====="
