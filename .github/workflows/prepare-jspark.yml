@@ -19,22 +19,55 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install media tools
+      - name: Install media analysis tools
         run: |
-          python -m pip install --upgrade yt-dlp
+          python -m pip install --upgrade gdown faster-whisper
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-      - name: Fetch captions and source metadata
-        shell: bash
+      - name: Download approved Drive source
         run: |
           mkdir -p analysis
-          yt-dlp --skip-download --write-auto-subs --write-subs --sub-langs "en,en-orig" --sub-format vtt -o "analysis/jspark.%(ext)s" "https://www.youtube.com/watch?v=3icVvgfe0Cw"
-          yt-dlp --skip-download --print "duration=%(duration)s width=%(width)s height=%(height)s fps=%(fps)s" "https://www.youtube.com/watch?v=3icVvgfe0Cw"
-          caption_file=$(find analysis -maxdepth 1 -name 'jspark*.vtt' | head -n 1)
-          if [ -z "$caption_file" ]; then
-            echo "No English captions were available" >&2
-            exit 1
-          fi
-          echo "===== CAPTIONS BEGIN ====="
-          cat "$caption_file"
-          echo "===== CAPTIONS END ====="
+          gdown --id "1CadJAZDNdXJi7OStrCWN_HndjSDq6JZO" -O analysis/source.mp4
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=index,codec_name,width,height,r_frame_rate -of json analysis/source.mp4
+      - name: Extract approved chapter
+        run: |
+          ffmpeg -hide_banner -y -ss 85 -i analysis/source.mp4 -t 270 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 192k analysis/chapter.mp4
+          ffmpeg -hide_banner -y -i analysis/chapter.mp4 -vn -ac 1 -ar 16000 analysis/chapter.wav
+          ffmpeg -hide_banner -y -i analysis/chapter.mp4 -vf "fps=1/8,scale=480:-1,tile=4x4" -frames:v 2 analysis/contact-%02d.jpg
+      - name: Transcribe with word timestamps
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from faster_whisper import WhisperModel
+          model = WhisperModel("small.en", device="cpu", compute_type="int8")
+          segments, info = model.transcribe(
+              "analysis/chapter.wav",
+              beam_size=5,
+              vad_filter=True,
+              word_timestamps=True,
+              condition_on_previous_text=True,
+          )
+          out = {"language": info.language, "duration": info.duration, "segments": []}
+          for segment in segments:
+              item = {
+                  "start": round(segment.start, 3),
+                  "end": round(segment.end, 3),
+                  "text": segment.text.strip(),
+                  "words": [
+                      {"start": round(w.start, 3), "end": round(w.end, 3), "word": w.word}
+                      for w in (segment.words or [])
+                  ],
+              }
+              out["segments"].append(item)
+              print(f"[{segment.start:07.2f} --> {segment.end:07.2f}] {segment.text.strip()}")
+          with open("analysis/transcript.json", "w", encoding="utf-8") as f:
+              json.dump(out, f, ensure_ascii=False, indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jspark-analysis
+          path: |
+            analysis/transcript.json
+            analysis/contact-*.jpg
+          retention-days: 7
